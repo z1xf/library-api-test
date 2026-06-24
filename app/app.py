@@ -115,7 +115,7 @@ def borrow():
         conn.close()
         return jsonify({"error": "图书不存在"}), 404
 
-    if book["stock"] < 0:
+    if book["stock"] <= 0:
         conn.close()
         return jsonify({"error": "库存不足"}), 400
     existing = conn.execute(
