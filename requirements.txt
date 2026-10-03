@@ -1,0 +1,7 @@
+flask
+pyjwt
+requests
+pytest
+pytest-html
+allure-pytest
+faker
