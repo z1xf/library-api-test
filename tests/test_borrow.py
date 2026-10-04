@@ -81,3 +81,69 @@ def test_return_book_borrowed_by_others(auth_token):
     assert return_res.status_code == 400, (
         f"预期用户B不能还用户A借的书(400)，实际返回 {return_res.status_code}"
     )
+
+
+@allure.epic("图书借阅管理系统")
+@allure.feature("借阅管理")
+@allure.story("库存边界")
+@allure.title("库存为1时借阅成功且库存变为0")
+def test_borrow_when_stock_is_one(auth_token):
+    """TC-010: 库存为1时借阅成功，借阅后库存应变为0"""
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    requests.post(f"{BASE_URL}/api/books",
+                  json={"title": "库存为1测试书", "stock": 1},
+                  headers=headers)
+    book_id = requests.get(f"{BASE_URL}/api/books",
+                           params={"title": "库存为1测试书"}).json()[0]["id"]
+
+    borrow_res = requests.post(f"{BASE_URL}/api/borrow",
+                               json={"book_id": book_id},
+                               headers=headers)
+    assert borrow_res.status_code == 200
+
+    book_res = requests.get(f"{BASE_URL}/api/books/{book_id}")
+    assert book_res.status_code == 200
+    assert book_res.json()["stock"] == 0
+
+
+@allure.epic("图书借阅管理系统")
+@allure.feature("借阅管理")
+@allure.story("异常场景")
+@allure.title("借阅不存在的图书ID应返回404")
+def test_borrow_book_not_found(auth_token):
+    """TC-012: 借阅不存在的图书id，应返回404"""
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    res = requests.post(f"{BASE_URL}/api/borrow",
+                        json={"book_id": 99999},
+                        headers=headers)
+    assert res.status_code == 404
+
+
+@allure.epic("图书借阅管理系统")
+@allure.feature("借阅管理")
+@allure.story("身份认证")
+@allure.title("未携带Token借阅应返回401")
+def test_borrow_without_token():
+    """TC-013: 未携带Authorization header借阅，应返回401"""
+    res = requests.post(f"{BASE_URL}/api/borrow",
+                        json={"book_id": 99999})
+    assert res.status_code == 401
+
+
+@allure.epic("图书借阅管理系统")
+@allure.feature("借阅管理")
+@allure.story("正常还书")
+@allure.title("归还未借阅的图书应返回400")
+def test_return_book_not_borrowed(auth_token):
+    """TC-014: 用户未借阅该图书时直接还书，应返回400"""
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    requests.post(f"{BASE_URL}/api/books",
+                  json={"title": "未借阅还书测试书", "stock": 1},
+                  headers=headers)
+    book_id = requests.get(f"{BASE_URL}/api/books",
+                           params={"title": "未借阅还书测试书"}).json()[0]["id"]
+
+    return_res = requests.post(f"{BASE_URL}/api/return",
+                               json={"book_id": book_id},
+                               headers=headers)
+    assert return_res.status_code == 400
