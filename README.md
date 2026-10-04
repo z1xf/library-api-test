@@ -6,62 +6,68 @@
 
 ## 项目亮点
 
-- **调用接口**：实现被测系统的业务逻辑，因此能针对真实业务规则设计有深度的测试用例，而不只是验证接口能否调通
-- **发现缺陷**：
-  - 通过边界值分析设计的用例（库存数量恰好为 0 时尝试借阅），发现后端库存判断条件存在 `stock < 0` 应为 `stock <= 0` 的边界错误，验证修复后重新跑通
-  - 通过等价类划分设计的用例（新增图书时缺少必填字段），发现后端未对 `title` 字段做空值校验，补充校验逻辑后验证修复
-- **覆盖完整业务场景**：用户认证、图书增查、借阅状态流转（借阅→重复借阅拦截→归还）、借阅记录的越权与数据隔离校验
-- **测试设计与实现分离**：先产出独立的测试用例设计文档（`test_case_design.md`），再据此实现自动化代码，体现"先设计、再实现"的测试工程思路
-- **接入 CI 与可视化报告**：GitHub Actions 自动跑测试，pytest-html 生成可视化报告
+* **调用接口**：实现被测系统的业务逻辑，因此能针对真实业务规则设计有深度的测试用例，而不只是验证接口能否调通
+* **发现缺陷**：
+
+  * 通过边界值分析设计的用例（库存数量恰好为 0 时尝试借阅），发现后端库存判断条件存在 `stock < 0` 应为 `stock <= 0` 的边界错误，验证修复后重新跑通
+  * 通过等价类划分设计的用例（新增图书时缺少必填字段），发现后端未对 `title` 字段做空值校验，补充校验逻辑后验证修复
+* **覆盖完整业务场景**：用户认证、图书增查、借阅状态流转（借阅→重复借阅拦截→归还）、借阅记录的越权与数据隔离校验
+* **测试设计与实现分离**：先产出独立的测试用例设计文档（`test_case_design.md`），再据此实现自动化代码，体现“先设计、再实现”的测试工程思路
+* **接入 CI 与可视化报告**：GitHub Actions 自动执行测试，使用 Allure 生成可视化测试报告，并通过 `epic / feature / story / title` 对测试用例进行分组管理
 
 ---
 
 ## 技术栈
 
-| 类别 | 工具 |
-|---|---|
-| 被测系统 | Flask + SQLite |
-| 测试框架 | Pytest |
-| HTTP 客户端 | requests |
-| 测试数据生成 | Faker / uuid |
-| 测试报告 | pytest-html |
-| CI | GitHub Actions |
+| 类别       | 工具                     |
+| -------- | ---------------------- |
+| 被测系统     | Flask + SQLite         |
+| 测试框架     | Pytest                 |
+| HTTP 客户端 | requests               |
+| 测试数据生成   | Faker / uuid           |
+| 测试报告     | Allure + allure-pytest |
+| CI       | GitHub Actions         |
 
 ---
 
 ## 项目结构
 
-```
+```text
 library-api-test/
 ├── app/
-│   ├── app.py                  
-│   └── library.db              
+│   ├── app.py
+│   └── library.db
 ├── tests/
-│   ├── conftest.py            
-│   ├── test_user.py           
-│   ├── test_book.py           
-│   ├── test_borrow.py         
-│   └── test_borrow_history.py  
-├── test_case_design.md         
+│   ├── conftest.py
+│   ├── test_user.py
+│   ├── test_book.py
+│   ├── test_borrow.py
+│   └── test_borrow_history.py
+├── test_case_design.md
 ├── requirements.txt
 ├── pytest.ini
-└── .github/workflows/test.yml  # CI 配置
+├── .gitignore
+├── .github/workflows/test.yml  # CI 配置
+├── temps/                      # Allure 原始测试结果
+└── report/                     # Allure HTML 测试报告
 ```
+
+其中 `temps/` 和 `report/` 为测试执行过程中生成的文件，已加入 `.gitignore`，不纳入 Git 版本管理。
 
 ---
 
 ## 接口列表
 
-| 模块 | 方法 | 路径 | 说明 |
-|---|---|---|---|
-| 用户 | POST | /api/register | 注册 |
-| 用户 | POST | /api/login | 登录，返回token |
-| 图书 | POST | /api/books | 新增图书（需token） |
-| 图书 | GET | /api/books | 查询图书列表，支持模糊搜索 |
-| 图书 | GET | /api/books/{id} | 查询单本图书 |
-| 借阅 | POST | /api/borrow | 借书（需token） |
-| 借阅 | POST | /api/return | 还书（需token） |
-| 借阅 | GET | /api/borrow/history | 查询本人借阅记录（需token） |
+| 模块 | 方法   | 路径                  | 说明               |
+| -- | ---- | ------------------- | ---------------- |
+| 用户 | POST | /api/register       | 注册               |
+| 用户 | POST | /api/login          | 登录，返回token       |
+| 图书 | POST | /api/books          | 新增图书（需token）     |
+| 图书 | GET  | /api/books          | 查询图书列表，支持模糊搜索    |
+| 图书 | GET  | /api/books/{id}     | 查询单本图书           |
+| 借阅 | POST | /api/borrow         | 借书（需token）       |
+| 借阅 | POST | /api/return         | 还书（需token）       |
+| 借阅 | GET  | /api/borrow/history | 查询本人借阅记录（需token） |
 
 ---
 
@@ -69,22 +75,63 @@ library-api-test/
 
 完整用例设计见 [`test_case_design.md`](./test_case_design.md)，共编写 24 条测试用例，覆盖以下设计方法：
 
-| 设计方法 | 应用场景举例 |
-|---|---|
-| 等价类划分 | 邮箱格式校验、缺少必填字段 |
-| 边界值分析 | 用户名长度上下边界、库存数量临界值（0/1） |
-| 场景法/状态流转 | 借阅→归还完整流程、重复借阅拦截 |
-| 错误推测法 | 查询不存在的资源id、重复注册同一用户名 |
+| 设计方法      | 应用场景举例                 |
+| --------- | ---------------------- |
+| 等价类划分     | 邮箱格式校验、缺少必填字段          |
+| 边界值分析     | 用户名长度上下边界、库存数量临界值（0/1） |
+| 场景法/状态流转  | 借阅→归还完整流程、重复借阅拦截       |
+| 错误推测法     | 查询不存在的资源id、重复注册同一用户名   |
 | 安全测试/数据隔离 | 未授权访问、跨用户越权操作、借阅记录数据隔离 |
+
+---
+
+## Allure 测试报告
+
+项目使用 Allure 装饰器对测试用例进行分层管理：
+
+```python
+@allure.epic("图书借阅管理系统")
+@allure.feature("借阅管理")
+@allure.story("正常借还流程")
+@allure.title("用户完成借书后可以正常还书")
+def test_borrow_and_return_flow():
+    ...
+```
+
+报告按照以下层级组织：
+
+```text
+Epic：图书借阅管理系统
+│
+├── Feature：用户管理
+│   ├── Story：用户注册
+│   └── Story：用户登录
+│
+├── Feature：图书管理
+│   ├── Story：新增图书
+│   ├── Story：图书查询
+│   └── Story：图书搜索
+│
+└── Feature：借阅管理
+    ├── Story：正常借还流程
+    ├── Story：库存边界
+    ├── Story：重复借阅
+    ├── Story：借阅历史
+    └── Story：数据隔离
+```
+
+其中：
+
+* `@allure.epic()`：定义测试系统或业务域
+* `@allure.feature()`：定义具体功能模块
+* `@allure.story()`：定义具体业务场景
+* `@allure.title()`：定义测试用例在报告中的展示名称
 
 ---
 
 ## 缺陷发现与修复记录
 
-| 编号 | 发现方式 | 问题描述 | 修复方式 |
-|---|---|---|---|
-| BUG-01 | 边界值分析（TC-009） | 库存判断条件写成 `stock < 0`，导致库存恰好为0时仍能借阅成功，库存变为负数 | 修正为 `stock <= 0` |
-| BUG-02 | 等价类划分（TC-017） | 新增图书接口未校验 `title` 字段是否为空，传空值也能成功创建 | 补充对 `title` 的非空校验 |
-
----
-
+| 编号     | 发现方式          | 问题描述                                        | 修复方式              |
+| ------ | ------------- | ------------------------------------------- | ----------------- |
+| BUG-01 | 边界值分析（TC-009） | 库存判断条件写成 `stock < 0`，导致库存恰好为0时仍能借阅成功，库存变为负数 | 修正为 `stock <= 0`  |
+| BUG-02 | 等价类划分（TC-017） | 新增图书接口未校验 `title` 字段是否为空，传空值也能成功创建          | 补充对 `title` 的非空校验 |
